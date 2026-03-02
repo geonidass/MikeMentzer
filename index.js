@@ -78,26 +78,34 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
     if (user.bot) return;
 
-    if (reaction.partial) await reaction.fetch();
+    try {
+        if (reaction.partial) await reaction.fetch();
 
-    if (reaction.message.id !== MESSAGE_ID) return;
-    if (reaction.emoji.name !== EMOJI) return;
+        console.log("Reacción detectada:", reaction.emoji.name, "de", user.tag);
 
-    const member = await reaction.message.guild.members.fetch(user.id);
-    await member.roles.add(VERIFICATION_ROLE);
-});
+        if (reaction.message.id !== MESSAGE_ID) {
+            console.log("No es el mensaje de verificación");
+            return;
+        }
 
-// QUITAR ROL
-client.on(Events.MessageReactionRemove, async (reaction, user) => {
-    if (user.bot) return;
+        if (reaction.emoji.name !== EMOJI) {
+            console.log("Emoji incorrecto");
+            return;
+        }
 
-    if (reaction.partial) await reaction.fetch();
+        const member = await reaction.message.guild.members.fetch(user.id);
 
-    if (reaction.message.id !== MESSAGE_ID) return;
-    if (reaction.emoji.name !== EMOJI) return;
+        if (member.roles.cache.has(VERIFICATION_ROLE)) {
+            console.log("El usuario ya tiene el rol");
+            return;
+        }
 
-    const member = await reaction.message.guild.members.fetch(user.id);
-    await member.roles.remove(VERIFICATION_ROLE);
+        await member.roles.add(VERIFICATION_ROLE);
+        console.log("Rol de verificación dado a", user.tag);
+
+    } catch (error) {
+        console.error("Error al dar el rol:", error);
+    }
 });
 
 // ===== FILTRO DE MALAS PALABRAS =====
