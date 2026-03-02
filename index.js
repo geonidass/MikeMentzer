@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, Events } = require('discord.js');
+const { Client, ActivityType, GatewayIntentBits, Partials, Events } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -21,6 +21,10 @@ const VERIFICATION_TEXT = "Reacciona con 🔑 para verificarte.";
 
 client.once(Events.ClientReady, async () => {
     console.log(`Bot listo como ${client.user.tag}`);
+    
+    client.user.setActivity("https://discord.gg/gWxJ36zc", {
+        type: ActivityType.Watching
+    })
 
     const channel = await client.channels.fetch(VERIFICATION_CHANNEL);
 
