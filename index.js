@@ -15,7 +15,7 @@ const TOKEN = process.env.TOKEN;
 
 // CONFIGURACIÓN
 const VERIFICATION_CHANNEL = "1258102961079582826";
-const VERIFICATION_ROLE = "1478126397523234857";
+const VERIFICATION_ROLE = "1478126063023423559";
 const EMOJI = "🔑";
 const VERIFICATION_TEXT = "Reacciona con 🔑 para verificarte.";
 // ===== ANTILINK =====
