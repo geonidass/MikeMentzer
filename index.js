@@ -16,11 +16,13 @@ const TOKEN = process.env.TOKEN;
 // CONFIGURACIÓN
 const VERIFICATION_CHANNEL = "1258102961079582826";
 const VERIFICATION_ROLE = "1477994183448068126";
-const MESSAGE_ID = ""; // pon aquí el ID del mensaje si ya existe
 const EMOJI = "🔑";
 const VERIFICATION_TEXT = "Reacciona con 🔑 para verificarte.";
 // ===== ANTILINK =====
 const GENERAL_CHANNEL = "1258102959506718732";
+
+// Variable global para guardar el ID del mensaje
+let verificationMessageId = null;
 
 // ===== AUTOMODERACIÓN =====
 const BAD_WORDS = [
@@ -62,43 +64,42 @@ client.once(Events.ClientReady, async () => {
 
     const channel = await client.channels.fetch(VERIFICATION_CHANNEL);
 
-    const newMessage = await channel.send(VERIFICATION_TEXT);
-    await newMessage.react(EMOJI);
+    // Revisar si el bot ya tiene un mensaje con ese contenido
+    const messages = await channel.messages.fetch({ limit: 20 });
+    const existingMessage = messages.find(
+        m => m.author.id === client.user.id && m.content === VERIFICATION_TEXT
+    );
 
-    console.log("Nuevo mensaje creado:", newMessage.id);
+    if (existingMessage) {
+        verificationMessageId = existingMessage.id;
+        console.log("Mensaje de verificación encontrado:", verificationMessageId);
+    } else {
+        const newMessage = await channel.send(VERIFICATION_TEXT);
+        await newMessage.react(EMOJI);
+        verificationMessageId = newMessage.id;
+        console.log("Mensaje de verificación creado:", verificationMessageId);
+    }
 });
 
 // DAR ROL
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
     if (user.bot) return;
 
+    if (reaction.partial) await reaction.fetch();
+
+    if (reaction.message.id !== verificationMessageId) return;
+    if (reaction.emoji.name !== EMOJI) return;
+
     try {
-        if (reaction.partial) await reaction.fetch();
-
-        console.log("Reacción detectada:", reaction.emoji.name, "de", user.tag);
-
-        if (reaction.message.id !== MESSAGE_ID) {
-            console.log("No es el mensaje de verificación");
-            return;
-        }
-
-        if (reaction.emoji.name !== EMOJI) {
-            console.log("Emoji incorrecto");
-            return;
-        }
-
         const member = await reaction.message.guild.members.fetch(user.id);
 
-        if (member.roles.cache.has(VERIFICATION_ROLE)) {
-            console.log("El usuario ya tiene el rol");
-            return;
-        }
+        if (member.roles.cache.has(VERIFICATION_ROLE)) return;
 
         await member.roles.add(VERIFICATION_ROLE);
         console.log("Rol de verificación dado a", user.tag);
 
-    } catch (error) {
-        console.error("Error al dar el rol:", error);
+    } catch (err) {
+        console.error("Error al dar rol:", err);
     }
 });
 
