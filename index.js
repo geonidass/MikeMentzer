@@ -6,6 +6,7 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions
+        GatewayIntentBits.MessageContent
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
@@ -18,6 +19,39 @@ const VERIFICATION_ROLE = "1477994183448068126";
 const MESSAGE_ID = "1478038133927972984"; // pon aquí el ID del mensaje si ya existe
 const EMOJI = "🔑";
 const VERIFICATION_TEXT = "Reacciona con 🔑 para verificarte.";
+// ===== ANTILINK =====
+const GENERAL_CHANNEL = "1258102959506718732";
+
+// ===== AUTOMODERACIÓN =====
+const BAD_WORDS = [
+    "verga",
+    "mierda",
+    "puta",
+    "puto",
+    "hijo de puta",
+    "hijodeputa",
+    "maricon",
+    "maricón",
+    "pendejo",
+    "pendeja",
+    "cabron",
+    "cabrón",
+    "culero",
+    "culera",
+    "coño",
+    "chingar",
+    "chingada",
+    "chingado",
+    "pinche",
+    "perra",
+    "perro",
+    "malparido",
+    "gonorrea",
+    "careverga",
+    "carepinga",
+    "mamaguevo",
+    "mamagueba"
+];
 
 client.once(Events.ClientReady, async () => {
     console.log(`Bot listo como ${client.user.tag}`);
@@ -64,6 +98,61 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 
     const member = await reaction.message.guild.members.fetch(user.id);
     await member.roles.remove(VERIFICATION_ROLE);
+});
+
+// ===== FILTRO DE MALAS PALABRAS =====
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+
+    const content = message.content.toLowerCase();
+
+    const containsBadWord = BAD_WORDS.some(word => content.includes(word));
+
+    if (containsBadWord) {
+        try {
+            await message.delete();
+
+            const warning = await message.channel.send(
+                `${message.author}, No no no, malas palabras no`
+            );
+
+            // El mensaje del bot se borra después de 5 segundos
+            setTimeout(() => {
+                warning.delete().catch(() => {});
+            }, 5000);
+
+        } catch (error) {
+            console.log("Error en automoderación:", error);
+        }
+    }
+});
+
+// ===== FILTRO DE LINKS SOLO EN GENERAL =====
+client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+
+    // Solo actuar en el canal General
+    if (message.channel.id !== GENERAL_CHANNEL) return;
+
+    // Detectar links (http, https, discord.gg, www, etc.)
+    const linkRegex = /(https?:\/\/|www\.|discord\.gg|discord\.com\/invite)/gi;
+
+    if (linkRegex.test(message.content)) {
+        try {
+            await message.delete();
+
+            const warning = await message.channel.send(
+                `${message.author}, No se permiten links en este canal`
+            );
+
+            setTimeout(() => {
+                warning.delete().catch(() => {});
+            }, 5000);
+
+        } catch (error) {
+            console.log("Error en anti-link:", error);
+        }
+    }
 });
 
 client.login(TOKEN);
