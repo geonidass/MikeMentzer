@@ -64,26 +64,18 @@ client.once(Events.ClientReady, async () => {
 
     const channel = await client.channels.fetch(VERIFICATION_CHANNEL);
 
-    // Revisar si el bot ya tiene un mensaje con ese contenido
-    const messages = await channel.messages.fetch({ limit: 20 });
-    const existingMessage = messages.find(
-        m => m.author.id === client.user.id && m.content === VERIFICATION_TEXT
-    );
+    // Crear el mensaje SIEMPRE desde cero (evita problemas con IDs antiguos)
+    const newMessage = await channel.send(VERIFICATION_TEXT);
+    await newMessage.react(EMOJI);
+    verificationMessageId = newMessage.id;
 
-    if (existingMessage) {
-        verificationMessageId = existingMessage.id;
-        console.log("Mensaje de verificación encontrado:", verificationMessageId);
-    } else {
-        const newMessage = await channel.send(VERIFICATION_TEXT);
-        await newMessage.react(EMOJI);
-        verificationMessageId = newMessage.id;
-        console.log("Mensaje de verificación creado:", verificationMessageId);
-    }
+    console.log("Mensaje de verificación creado con ID:", verificationMessageId);
 });
 
 // DAR ROL
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
     if (user.bot) return;
+    if (!verificationMessageId) return; // No hay mensaje aún
 
     if (reaction.partial) await reaction.fetch();
 
