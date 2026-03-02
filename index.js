@@ -16,7 +16,7 @@ const TOKEN = process.env.TOKEN;
 // CONFIGURACIÓN
 const VERIFICATION_CHANNEL = "1258102961079582826";
 const VERIFICATION_ROLE = "1477994183448068126";
-const MESSAGE_ID = "1478038133927972984"; // pon aquí el ID del mensaje si ya existe
+const MESSAGE_ID = ""; // pon aquí el ID del mensaje si ya existe
 const EMOJI = "🔑";
 const VERIFICATION_TEXT = "Reacciona con 🔑 para verificarte.";
 // ===== ANTILINK =====
@@ -62,16 +62,10 @@ client.once(Events.ClientReady, async () => {
 
     const channel = await client.channels.fetch(VERIFICATION_CHANNEL);
 
-    try {
-        // Intentar obtener el mensaje existente
-        const message = await channel.messages.fetch(MESSAGE_ID);
-        console.log("Mensaje de verificación encontrado");
-    } catch {
-        // Si no existe, crearlo
-        const newMessage = await channel.send(VERIFICATION_TEXT);
-        await newMessage.react(EMOJI);
-        console.log("Nuevo mensaje creado con ID:", newMessage.id);
-    }
+    const newMessage = await channel.send(VERIFICATION_TEXT);
+    await newMessage.react(EMOJI);
+
+    console.log("Nuevo mensaje creado:", newMessage.id);
 });
 
 // DAR ROL
